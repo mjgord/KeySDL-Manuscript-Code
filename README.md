@@ -3,7 +3,7 @@
 KeySDL is a pipeline to fit GLV or replicator models of microbial systems from observations assumed to be at steady state. The research paper detailing the motivation, use cases, and validation of KeySDL is available as a [preprint].
 
 This file contains the full scripts used in the KeySDL paper.
-For easy use of KeySDL without modification, see the repository containing the minimal standalone implementation of KeySDL [here].
+For easy use of KeySDL without modification, see the repository containing the minimal standalone implementation of KeySDL [here](https://github.com/mjgord/KeySDL/).
 
 ## Environment
 
