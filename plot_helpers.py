@@ -16,6 +16,8 @@ def scatter_plot(data,title=None,spearman=True,point_label_size=False,color=None
         plt.legend(bbox_to_anchor=(1.05, 1.0), loc='upper left',ncol = data.shape[0]//20+1)
     else:
         sns.scatterplot(data=data,x=data.columns[0],y=data.columns[1],s=15)
+        plt.xlabel(data.columns[0],fontsize=13)
+        plt.ylabel(data.columns[1],fontsize=13)
     if spearman:
         x = data.iloc[:,0]
         y = data.iloc[:,1]
@@ -25,9 +27,9 @@ def scatter_plot(data,title=None,spearman=True,point_label_size=False,color=None
             pstring = f'p={pvalue:.1e}'
         else:
             pstring = f'p={pvalue:.2f}'
-        plt.annotate(f'ρ= {statistic:.2f}, {pstring}',xy=(0.025,0.9),xycoords='axes fraction',fontsize=12)
+        plt.annotate(f'ρ= {statistic:.2f}, {pstring}',xy=(0.025,0.9),xycoords='axes fraction',fontsize=16)
     if title:
-        plt.title(title,fontsize=12)
+        plt.title(title,fontsize=14)
     if point_label_size and not color:
         for i,txt in enumerate(data.index):
             x = data.iloc[:,0]

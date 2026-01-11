@@ -119,9 +119,9 @@ for row in range(train_samples.shape[0]):
     plt.subplot(2,8,row+1)
     i = 0
     for microbe, weight_count in microbe_counts.items():
-        plt.bar(['True','Predicted','Null'], weight_count, width, label=microbe, bottom=bottom,hatch=hatch,color=colors[i])
+        plt.bar(['T','P','N'], weight_count, width, label=microbe, bottom=bottom,hatch=hatch,color=colors[i])
         plt.yticks([])
-        plt.xticks(fontsize=4)
+        plt.xticks(fontsize=12)
         bottom += weight_count
         i += 1
     plt.title(microbe_names[row])
@@ -133,9 +133,9 @@ width=1
 plt.subplot(2,8,row+2)
 i = 0
 for microbe, weight_count in microbe_counts.items():
-    plt.bar(['True'], weight_count, label=microbe, bottom=bottom,color=colors[i])
+    plt.bar(['T'], weight_count, label=microbe, bottom=bottom,color=colors[i])
     plt.yticks([])
-    plt.xticks(fontsize=4)
+    plt.xticks(fontsize=12)
     bottom += weight_count
     i += 1
 plt.title('Baseline')

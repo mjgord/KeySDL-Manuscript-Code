@@ -38,14 +38,15 @@ class ss_optim(nn.Module):
             return torch.matmul(self.A,x.T).T
 
 class ss_optim_loss(nn.Module):
-    def __init__(self,alpha=1e-15):
+    def __init__(self,alpha=1e-15,diag_alpha=1e6):
             super().__init__()
             self.alpha = alpha
+            self.diag_alpha=diag_alpha
     def forward(self,ss_residual,A):
         det = torch.abs(torch.det(A)) # determinant term to enforce invertibility
         det_loss = torch.where(det < 0.1,1/det,0)
         diag = torch.diag(A) # diagonal to prevent self-influence from becoming positive
-        diag_loss = 1e6*torch.norm(torch.where(diag > -0.1,diag+0.1,0),p=1)
+        diag_loss = self.diag_alpha*torch.norm(torch.where(diag > -0.1,diag+0.1,0),p=1)
         l1 = self.alpha * torch.norm(A,p=1) # l1 norm to enforce sparsity
         return (torch.norm(ss_residual,p=2) + diag_loss + det_loss + l1)
 
@@ -54,7 +55,8 @@ def reconstruct_from_ss(X,
                         compositional=True,
                         max_iter=10000, 
                         lr=1e-3, 
-                        alpha=1e-15, 
+                        alpha=1e-15,
+                        diag_alpha=1e6, 
                         batch_size=32, 
                         A_init=None, 
                         r_init=None, 
@@ -86,7 +88,7 @@ def reconstruct_from_ss(X,
     X_mask= torch.where(X==0,0,1).float() # mask to prevent gradient updates to extinct species
         
     model = ss_optim(n=X.shape[1],compositional=compositional,A=A_init,r=r_init)
-    loss_fn = ss_optim_loss(alpha=alpha)
+    loss_fn = ss_optim_loss(alpha=alpha,diag_alpha=diag_alpha)
     optimizer = torch.optim.Adam(model.parameters(),lr=lr)
 
     for i in range(max_iter):

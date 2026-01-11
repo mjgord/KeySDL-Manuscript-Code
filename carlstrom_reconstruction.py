@@ -132,9 +132,9 @@ for row in range(train_samples.shape[0]):
     plt.subplot(3,9,row+1)
     i = 0
     for microbe, weight_count in microbe_counts.items():
-        plt.bar(['True','Predicted','Null'], weight_count, width, label=microbe, bottom=bottom,hatch=hatch,color=colors[i])
+        plt.bar(['T','P','N'], weight_count, width, label=microbe, bottom=bottom,hatch=hatch,color=colors[i])
         plt.yticks([])
-        plt.xticks(fontsize=4)
+        plt.xticks(fontsize=12)
         bottom += weight_count
         i += 1
     plt.title(microbe_names[row])
@@ -146,9 +146,9 @@ width=1
 plt.subplot(3,9,row+2)
 i = 0
 for microbe, weight_count in microbe_counts.items():
-    plt.bar(['True'], weight_count, label=microbe, bottom=bottom,color=colors[i])
+    plt.bar(['T'], weight_count, label=microbe, bottom=bottom,color=colors[i])
     plt.yticks([])
-    plt.xticks(fontsize=4)
+    plt.xticks(fontsize=12)
     bottom += weight_count
     i += 1
 plt.title('Baseline')
@@ -168,4 +168,29 @@ sns.boxplot(errors,y=0,hue='Model Type',x='Model Type')
 plt.ylabel('Error (Bray-Curtis Distance)')
 plt.title('Steady State Error')
 plt.savefig('carlstrom_errors.eps',format='eps',bbox_inches='tight')
+# %% Noise level validation
+rng = np.random.default_rng(seed=12345)
+
+baseline = baseline_comp.copy()
+baseline = np.repeat(baseline.values.reshape(1,-1),dropout_data.shape[1],axis=0)
+baseline = baseline*(dropout_data!=0)
+keystones = (np.abs(dropout_data-baseline)).sum(axis=1)/(np.abs(dropout_data+baseline)).sum(axis=1)
+keystones = pd.Series(keystones,index=dropout_data.index)
+mean_keystoneness = np.mean(keystones)
+sigma_list = np.arange(0,2,0.1)
+noise_bcds = []
+baseline = baseline_comp.copy()
+for sigma in sigma_list: 
+        baseline_noise = baseline + rng.normal(loc=0,scale=sigma/dropout_data.shape[1],size=baseline.shape)
+        baseline_noise[baseline_noise<0] = 0
+        baseline_noise = baseline_noise/baseline_noise.sum()
+        noise_bcd = (np.abs(baseline_noise-baseline)).sum()/(np.abs(baseline_noise+baseline)).sum()
+        noise_bcds.append(noise_bcd)
+plt.plot(sigma_list*100,noise_bcds)
+plt.axhline(y=mean_keystoneness,color='r')
+plt.legend(['BCD Between Clean and Noisy Baselines','Mean BCD Between Clean Baseline and Dropouts'])
+plt.xlabel('Gaussian Noise Standard Deviation (% of Mean Abundance)',fontsize=16)
+plt.ylabel('Bray-Curtis Dissimilarity',fontsize=16)
+plt.title('Composition Self-Dissimilarity with Additive Gaussian Noise',fontsize=18)
+plt.savefig('self_dissimilarity.eps',format='eps',bbox_inches='tight')
 # %%

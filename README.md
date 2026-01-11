@@ -1,9 +1,9 @@
 # KeySDL
 
-KeySDL is a pipeline to fit GLV or replicator models of microbial systems from observations assumed to be at steady state. The research paper detailing the motivation, use cases, and validation of KeySDL is available as a [preprint](https://doi.org/10.1101/2025.08.07.669165).
+KeySDL is a pipeline to fit GLV or replicator models of microbial systems from observations assumed to be at steady state. The research paper detailing the motivation, use cases, and validation of KeySDL is available as a [preprint].
 
 This file contains the full scripts used in the KeySDL paper.
-For easy use of KeySDL without modification, see the repository containing the minimal standalone implementation of KeySDL [here](https://github.com/mjgord/KeySDL/).
+For easy use of KeySDL without modification, see the repository containing the minimal standalone implementation of KeySDL [here].
 
 ## Environment
 
@@ -22,6 +22,7 @@ The primary dependencies of the scripts in this repository are numpy, pandas, ne
 |plot_helpers.py|Plot generation utility functions.|
 |reconstruct_from_ss.py|Reconstruction and self consistency functionality.|
 |SparCC.py|Adaptation of SparCC from [[4]](#4) to Python3 for comparison with KeySDL.|
+|In_Silico_Sensitivity.py|Performs sensitivity testing for the key parameters of KeySDL.|
 
 ## References
 

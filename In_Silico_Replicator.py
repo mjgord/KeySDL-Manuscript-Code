@@ -77,9 +77,9 @@ for n_train_samples in n_samples_list:
 
 plt.plot(n_samples_list,spearman_scores)
 plt.xticks([5,100,200,300,400,500])
-plt.title('Correlation Between True and Compositionally Reconstructed K$_{BC}$')
-plt.xlabel('Number of Samples Used In Reconstruction')
-plt.ylabel('$K_{BC}$ Spearman Correlation')
+plt.title('Correlation Between True and Compositionally Reconstructed K$_{BC}$',fontsize=14)
+plt.xlabel('Number of Samples Used In Reconstruction',fontsize=13)
+plt.ylabel('$K_{BC}$ Spearman Correlation',fontsize=13)
 plt.savefig('replicator_nsamples.eps',format='eps',bbox_inches='tight')
 
 # %%'''

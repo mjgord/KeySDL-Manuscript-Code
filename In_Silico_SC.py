@@ -17,6 +17,24 @@ A = generate_klemm_net(n=n,seed=seed) # generate klemm distributed interactions 
 ryp.to_r(A,'A') # convert to R so that it can be used in miaSim
 soi_string = 'simulateSOI(n_species,x0 = x0,names_species = NULL,carrying_capacity = 10000,A = A,k_events = 5,t_end = 1000,metacommunity_probability=runif(n_species, min = 0.0001, max = 0.001))'
 #%%
+dropouts = (np.eye(n) == 0).astype(float)
+ryp.to_r(n,'n_species')
+for i,idx in enumerate(dropouts):
+    idx = np.array(idx)*10
+    ryp.to_r(idx,'x0')
+    sample = ryp.to_py(soi_string,format='numpy')
+    dropouts[i,:] = sample['assays']['data']['listData']['counts'][:,-1]
+ryp.to_r(np.ones(n),'x0')
+sample = ryp.to_py(soi_string,format='numpy')
+baseline = sample['assays']['data']['listData']['counts'][:,-1]
+
+dropouts = (dropouts.T/dropouts.sum(axis=1)).T
+baseline = baseline/np.sum(baseline)
+
+baseline = np.repeat(baseline.reshape(1,-1),dropouts.shape[1],axis=0)
+baseline = baseline*(dropouts!=0)
+keystoneness = np.sum(np.abs(dropouts-baseline),axis=1)/np.sum(np.abs(dropouts+baseline),axis=1)
+#%%
 rng = np.random.default_rng(seed=seed)
 train_samples = np.where(rng.random((100,n)) < 0.2,0.,1.)
 ts = train_samples.copy()
@@ -26,12 +44,12 @@ for i,idx in enumerate(train_samples):
     ryp.to_r(idx,'x0')
     sample = ryp.to_py(soi_string,format='numpy')
     train_samples[i,:] = sample['assays']['data']['listData']['counts'][:,-1]
-
 perturbed = (train_samples.T/train_samples.sum(axis=1)).T
 compositional=True
 
 # %%
 scores = []
+spearmans = []
 n_rand_subsamples = 10
 sigma_list = np.arange(0,2,0.1)
 for sigma in sigma_list:
@@ -42,7 +60,11 @@ for sigma in sigma_list:
         samples = (samples.T/samples.sum(axis=1)).T
         A_pred,r_pred = reconstruct_from_ss(samples, compositional=compositional,max_iter=5000)
         scores.append(self_consistency_score(samples,A_pred,r_pred))
+        sim = glv_simulator(A_pred,r_pred)
+        keystoneness_ss = sim.bcd_keystones()
+        spearmans.append(spearmanr(keystoneness,keystoneness_ss)[0])
 soi_scores = scores.copy()
+soi_spearmans = spearmans.copy()
 # %%
 rng = np.random.default_rng(seed=seed)
 
@@ -50,8 +72,10 @@ A,r,baseline = initialize_glv(n,seed=12345)
 sim = glv_simulator(A=A,r=r)
 
 perturbed = random_training_samples(A=A,r=r,n_train_samples=100,seed=seed)
+keystoneness = sim.bcd_keystones()
 perturbed = (perturbed.T/perturbed.sum(axis=1)).T
 scores = []
+spearmans = []
 
 for sigma in sigma_list:
     temp_scores = []
@@ -61,7 +85,11 @@ for sigma in sigma_list:
         samples = (samples.T/samples.sum(axis=1)).T
         A_pred,r_pred = reconstruct_from_ss(samples, compositional=compositional,max_iter=5000)
         scores.append(self_consistency_score(samples,A_pred,r_pred))
+        sim = glv_simulator(A_pred,r_pred)
+        keystoneness_ss = sim.bcd_keystones()
+        spearmans.append(spearmanr(keystoneness,keystoneness_ss)[0])
 glv_scores = scores.copy()
+glv_spearmans = spearmans.copy()
 
 #%%
 rng = np.random.default_rng(seed=seed)
@@ -69,6 +97,7 @@ rng = np.random.default_rng(seed=seed)
 perturbed = rng.random(size=(100,n))
 perturbed = (perturbed.T/perturbed.sum(axis=1)).T
 scores = []
+spearmans = []
 
 for sigma in sigma_list:
     temp_scores = []
@@ -78,7 +107,11 @@ for sigma in sigma_list:
         samples = (samples.T/samples.sum(axis=1)).T
         A_pred,r_pred = reconstruct_from_ss(samples, compositional=compositional,max_iter=5000)
         scores.append(self_consistency_score(samples,A_pred,r_pred))
+        sim = glv_simulator(A_pred,r_pred)
+        keystoneness_ss = sim.bcd_keystones()
+        spearmans.append(spearmanr(keystoneness,keystoneness_ss)[0])
 noise_scores = scores.copy()
+noise_spearmans = spearmans.copy()
 # %%
 soi_scores = pd.DataFrame(data=soi_scores,columns=['Score'])
 soi_scores['Model'] = 'Noisy SOI'
@@ -97,9 +130,29 @@ sns.boxplot(scores,y='Score',hue='Model',x='Model')
 plt.ylabel('S$_{sc}$')
 plt.savefig('sc_boxplot.eps',format='eps',bbox_inches='tight')
 
+soi_spearmans = pd.DataFrame(data=soi_spearmans,columns=['Score'])
+soi_spearmans['Model'] = 'Noisy SOI'
+noise_spearmans = pd.DataFrame(data=noise_spearmans,columns=['Score'])
+noise_spearmans['Model'] = 'Noise'
+glv_spearmans = pd.DataFrame(data=glv_spearmans,columns=['Score'])
+glv_spearmans['Model'] = 'Noisy GLV'
+spearmans = pd.concat([glv_spearmans,soi_spearmans,noise_spearmans],axis=0)
+plt.figure()
+sns.boxplot(spearmans,y='Score',hue='Model',x='Model')
+plt.ylabel('$K_{BC}$ Spearman Correlation')
+plt.savefig('sc_spearman_boxplot.eps',format='eps',bbox_inches='tight')
+
+from scipy.stats import ttest_ind
+s,p = ttest_ind(soi_spearmans.Score,noise_spearmans.Score)
+print(f'Spearman T-Test P Value: {p}')
+print(f'GLV Spearman Mean: {np.mean(glv_spearmans.Score)}')
+print(f'SOI Spearman Mean: {np.mean(soi_spearmans.Score)}')
+print(f'Noise Spearman Mean: {np.mean(noise_spearmans.Score)}')
+
+
 from scipy.stats import kruskal
 s,p = kruskal(glv_scores.Score,soi_scores.Score,noise_scores.Score)
-print(f'Kruskal Test P Value: {p}')
+print(f'SSC Kruskal Test P Value: {p}')
 # %%
 
 import numpy as np

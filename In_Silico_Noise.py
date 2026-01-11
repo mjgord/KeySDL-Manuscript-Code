@@ -43,9 +43,9 @@ for sigma in sigma_list:
 
 
 plt.plot(sigma_list*100,mean_scores)
-plt.title('Impact of Additive Noise on K$_{BC}$ Prediction')
-plt.xlabel('Gaussian Noise Standard Deviation (% of Mean Abundance)')
-plt.ylabel('K$_{BC}$ Spearman Correlation')
+plt.title('Impact of Additive Noise on K$_{BC}$ Prediction',fontsize=14)
+plt.xlabel('Gaussian Noise Standard Deviation (% of Mean Abundance)',fontsize=13)
+plt.ylabel('K$_{BC}$ Spearman Correlation',fontsize=13)
 plt.savefig('noise_eval.eps',format='eps',bbox_inches='tight')
 
 #%% Figure 2
@@ -76,9 +76,9 @@ for count in total_count_list:
 
 
 plt.plot(total_count_list,scores)
-plt.title('Impact of Library Size on K$_{BC}$ Prediction')
-plt.xlabel('Library Size')
-plt.ylabel('K$_{BC}$ Spearman Correlation')
+plt.title('Impact of Library Size on K$_{BC}$ Prediction',fontsize=14)
+plt.xlabel('Library Size',fontsize=13)
+plt.ylabel('K$_{BC}$ Spearman Correlation',fontsize=13)
 plt.savefig('quant_eval.eps',format='eps',bbox_inches='tight')
 
 #%%
